@@ -5,10 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema Inteligente de Notas Fiscais</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/login.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="app-container">
+    <!-- Login Overlay -->
+    <div id="loginOverlay">
+        <div class="login-container">
+            <h2>Bem-vindo ao SINF</h2>
+            <p>Faça login para acessar suas notas</p>
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="loginEmail">E-mail</label>
+                    <input type="email" id="loginEmail" placeholder="seu@email.com" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+            </form>
+            <div class="login-footer">
+                <p>Sistema Inteligente de Notas Fiscais v1.0</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container hidden" id="appContainer">
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -16,10 +35,11 @@
                 <p>Sistema Inteligente</p>
             </div>
             <div class="user-select-container" style="padding: 0 1.5rem; margin-bottom: 1rem;">
-                <label for="userSelect" style="color: rgba(255,255,255,0.7); font-size: 0.8rem; display: block; margin-bottom: 0.3rem;">Usuário Ativo</label>
-                <select id="userSelect" style="width: 100%; padding: 0.3rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;">
-                    <!-- Populated by JS -->
-                </select>
+                <label style="color: rgba(255,255,255,0.7); font-size: 0.8rem; display: block; margin-bottom: 0.3rem;">Usuário Logado</label>
+                <div id="currentUserDisplay" style="color: white; font-weight: 500; padding: 0.3rem 0; border-bottom: 1px solid rgba(255,255,255,0.2);">
+                    <!-- Email populated by JS -->
+                </div>
+                <button id="btnLogout" class="btn btn-sm btn-secondary" style="margin-top: 0.5rem; width: 100%; font-size: 0.8rem;">Sair</button>
             </div>
             <nav class="sidebar-nav">
                 <ul>
@@ -122,6 +142,13 @@
                                 <label for="newUserWebhook">URL do Webhook (Power Automate)</label>
                                 <input type="url" id="newUserWebhook" placeholder="https://..." required>
                             </div>
+                            <div class="form-group">
+                                <label for="newUserRole">Cargo</label>
+                                <select id="newUserRole" required>
+                                    <option value="member">Membro</option>
+                                    <option value="admin">Administrador</option>
+                                </select>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Adicionar Usuário</button>
                     </form>
@@ -134,6 +161,7 @@
                             <thead>
                                 <tr>
                                     <th>E-mail</th>
+                                    <th>Cargo</th>
                                     <th>Webhook Configurado</th>
                                     <th>Ações</th>
                                 </tr>
@@ -204,6 +232,7 @@
 
     <!-- Scripts -->
     <script src="js/config.js"></script>
+    <script src="js/storage.js"></script>
     <script src="js/services.js"></script>
     <script src="js/validation.js"></script>
     <script src="js/dom.js"></script>

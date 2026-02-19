@@ -17,24 +17,23 @@ class DOMManager {
             costCentersList: document.getElementById('cost-centers-list'),
             addCustomFieldForm: document.getElementById('addCustomFieldForm'),
             addCostCenterForm: document.getElementById('addCostCenterForm'),
-            userSelect: document.getElementById('userSelect'),
+            currentUserDisplay: document.getElementById('currentUserDisplay'), // Changed from userSelect
+            btnLogout: document.getElementById('btnLogout'),
             loaderText: document.getElementById('loader-text')
         };
     }
 
-    populateUserSelect() {
-        const select = this.elements.userSelect;
-        select.innerHTML = '';
-        Object.keys(this.config.users).forEach(email => {
-            const option = document.createElement('option');
-            option.value = email;
-            option.textContent = email;
-            if (email === this.config.currentUser) {
-                option.selected = true;
-            }
-            select.appendChild(option);
-        });
+    // Removed populateUserSelect() as it is no longer used for sidebar select
+
+    /**
+     * Updates the user display in the sidebar
+     */
+    updateUserDisplay(email) {
+        if (this.elements.currentUserDisplay) {
+            this.elements.currentUserDisplay.textContent = email;
+        }
     }
+
 
     /**
      * 1️⃣ Formas de pagamento dinâmicas

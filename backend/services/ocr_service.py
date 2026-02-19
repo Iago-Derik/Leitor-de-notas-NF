@@ -1,4 +1,4 @@
-try:
+﻿try:
     import PyPDF2
 except ImportError:
     PyPDF2 = None
@@ -37,6 +37,21 @@ def extract_text_pdf(pdf_path):
              
         client = genai.Client(api_key=api_key)
         
+        # Using Gemma 2 (9B parameters) via Google AI Studio API
+        # Model ID: "gemini-2.0-flash" (or "gemma-2-9b-it" if explicitly available in your region)
+        # Note: As of now, Google AI Studio exposes Gemini models primarily. 
+        # However, if Gemma is available to your API key, you can try "gemma-2-9b-it".
+        # If that fails, we can fallback to "gemini-2.0-flash" which is very high limit.
+        # Let's try to set it to a model name that represents the user intent or a very cost-effective one.
+        
+        # User requested Gemma. In Google AI Studio, Gemma models are often accessed as "gemma-2-9b-it" 
+        # or similar. If this specific string fails, we might need to revert to "gemini-1.5-flash" 
+        # which has a massive free tier.
+        
+        model_id = "gemma-3-12b-it" # Using efficient Flash model as proxy for high-limit request
+        # If you confirm you have access to "gemma-2-9b-it" specifically, change the line below:
+        # model_id = "gemma-2-9b-it"
+
         prompt = f"""
         Você é um assistente especializado em contabilidade. Analise o texto desta Nota Fiscal e extraia os seguintes dados em formato JSON.
         
@@ -54,10 +69,10 @@ def extract_text_pdf(pdf_path):
         }}
         """
 
-        # Usando o modelo gemini-1.5-flash que é o padrão atual gratuito
-        # Se este falhar, pode tentar 'gemini-1.5-pro'
+        # Usando o modelo configurado acima (Gemma ou Gemini Flash)
+        # Atenção: Se usar o Gemma, pode ser necessário ajustar o nome exato do modelo 'gemma-2-9b-it'
         response = client.models.generate_content(
-            model='gemini-2.5-flash-lite', 
+            model='gemma-3-12b-it',  # Tente "gemma-2-9b-it" se disponível, ou "gemini-2.0-flash" como fallback
             contents=prompt
         )
         

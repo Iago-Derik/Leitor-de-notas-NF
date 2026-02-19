@@ -1,15 +1,15 @@
 // js/config.js
 
+// This object now serves as the TEMPLATE and RUNTIME STATE holder.
+// When a user logs in, their data is loaded INTO this object.
 const Config = {
-    // 0️⃣ Configuração de Usuários
-    users: {
-        "admin@empresa.com": "https://prod-00.brazilsouth.logic.azure.com:443/workflows/sample-admin",
-        "financeiro@empresa.com": "https://prod-00.brazilsouth.logic.azure.com:443/workflows/sample-financeiro",
-        "iago@empresa.com": "https://prod-00.brazilsouth.logic.azure.com:443/workflows/sample-iago"
-    },
-    currentUser: "admin@empresa.com",
+    // Current User Session
+    currentUser: null,
+    
+    // Webhook URL for the current user
+    currentWebhook: null,
 
-    // 1️⃣ Formas de pagamento dinâmicas
+    // 1️⃣ Formas de pagamento dinâmicas (Global)
     paymentMethods: [
         "Boleto Bancário",
         "Cartão de Crédito",
@@ -18,7 +18,8 @@ const Config = {
         "Dinheiro"
     ],
 
-    // 2️⃣ Campos configuráveis (Campos Padrão)
+    // 2️⃣ Campos configuráveis (Template Padrão)
+    // The active state/editable state will be overwritten by user preferences
     fieldConfig: {
         numeroNota: {
             id: "numeroNota",
@@ -78,25 +79,23 @@ const Config = {
         }
     },
 
-    // 3️⃣ Campos Personalizados (Adicionados pelo usuário)
+    // 3️⃣ Campos Personalizados (Carregados do Usuário)
     customFields: [],
 
-    // 4️⃣ Centros de Custo (Numérico e Dinâmico)
+    // 4️⃣ Centros de Custo (Carregados do Usuário)
     costCenters: [
         { codigo: 1001, descricao: "Administrativo" },
-        { codigo: 2002, descricao: "Financeiro" },
-        { codigo: 3003, descricao: "Operacional" },
-        { codigo: 4004, descricao: "Marketing" }
+        { codigo: 2002, descricao: "Financeiro" }
     ],
 
-    // 5️⃣ Status da Nota
+    // 5️⃣ Status da Nota (Global)
     invoiceStatus: [
         { id: "pendente", label: "Pendente", color: "warning" },
         { id: "aprovada", label: "Aprovada", color: "success" },
         { id: "paga", label: "Paga", color: "info" }
     ],
 
-    // 6️⃣ Notas Salvas (Armazenamento em memória)
+    // 6️⃣ Notas Salvas (Carregadas do Usuário)
     savedInvoices: [],
 
     // API Configuration
