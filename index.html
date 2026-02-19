@@ -8,46 +8,149 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Sistema Inteligente de Notas Fiscais</h1>
-            <p>Upload e processamento automático de NFe (PDF ou XML)</p>
-        </header>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>SINF</h2>
+                <p>Sistema Inteligente</p>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#" class="nav-link active" data-target="upload-section">📄 Nova Nota</a></li>
+                    <li><a href="#" class="nav-link" data-target="saved-invoices-section">📂 Notas Salvas</a></li>
+                    <li><a href="#" class="nav-link" data-target="customization-section">⚙️ Personalização</a></li>
+                </ul>
+            </nav>
+        </aside>
 
-        <main>
-            <!-- Upload Section -->
-            <section class="upload-section">
-                <div class="drop-zone" id="drop-zone">
-                    <span class="drop-zone__prompt">Arraste o arquivo aqui ou clique para selecionar</span>
-                    <input type="file" name="file" class="drop-zone__input" id="fileInput" accept=".xml, .pdf">
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Sistema Inteligente de Notas Fiscais</h1>
+            </header>
+
+            <!-- Section: Upload & Form (Existing) -->
+            <section id="upload-section" class="content-section">
+                <!-- Upload Section -->
+                <div class="upload-area">
+                    <div class="drop-zone" id="drop-zone">
+                        <span class="drop-zone__prompt">Arraste o arquivo aqui ou clique para selecionar</span>
+                        <input type="file" name="file" class="drop-zone__input" id="fileInput" accept=".xml, .pdf">
+                    </div>
+                    <div id="loader" class="loader hidden">
+                        <div class="spinner"></div>
+                        <p>Processando nota fiscal...</p>
+                    </div>
                 </div>
-                <div id="loader" class="loader hidden">
-                    <div class="spinner"></div>
-                    <p>Processando nota fiscal...</p>
+
+                <!-- Invoice Details Form -->
+                <div class="details-section hidden" id="details-section">
+                    <h2>Detalhes da Nota</h2>
+                    <form id="invoiceForm">
+                        <div class="form-grid" id="dynamic-fields">
+                            <!-- Fields will be populated by JS -->
+                        </div>
+
+                        <div class="form-group">
+                            <label for="paymentMethod">Forma de Pagamento</label>
+                            <select id="paymentMethod" name="paymentMethod" required>
+                                <option value="">Selecione...</option>
+                                <!-- Options populated by JS -->
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="invoiceStatus">Status</label>
+                            <select id="invoiceStatus" name="invoiceStatus" required>
+                                <!-- Options populated by JS -->
+                            </select>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Salvar Nota</button>
+                            <button type="button" class="btn btn-secondary" id="btnCancel">Cancelar</button>
+                        </div>
+                    </form>
                 </div>
             </section>
 
-            <!-- Invoice Details Form -->
-            <section class="details-section hidden" id="details-section">
-                <h2>Detalhes da Nota</h2>
-                <form id="invoiceForm">
-                    <div class="form-grid" id="dynamic-fields">
-                        <!-- Fields will be populated by JS -->
-                    </div>
+            <!-- Section: Saved Invoices (New) -->
+            <section id="saved-invoices-section" class="content-section hidden">
+                <h2>Notas Salvas</h2>
+                <div class="table-container">
+                    <table id="invoicesTable" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Número</th>
+                                <th>CNPJ</th>
+                                <th>Fornecedor</th>
+                                <th>Valor</th>
+                                <th>Emissão</th>
+                                <th>Centro de Custo</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Rows populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
 
-                    <div class="form-group">
-                        <label for="paymentMethod">Forma de Pagamento</label>
-                        <select id="paymentMethod" name="paymentMethod" required>
-                            <option value="">Selecione...</option>
-                            <!-- Options populated by JS -->
-                        </select>
-                    </div>
+            <!-- Section: Customization (New) -->
+            <section id="customization-section" class="content-section hidden">
+                <h2>Personalização</h2>
 
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">Salvar Nota</button>
-                        <button type="button" class="btn btn-secondary" id="btnCancel">Cancelar</button>
+                <div class="customization-group">
+                    <h3>Campos do Formulário</h3>
+                    <div id="fields-config-list" class="config-list">
+                        <!-- Config items populated by JS -->
                     </div>
-                </form>
+                </div>
+
+                <div class="customization-group">
+                    <h3>Adicionar Campo Personalizado</h3>
+                    <form id="addCustomFieldForm" class="add-field-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="newFieldLabel">Nome do Campo</label>
+                                <input type="text" id="newFieldLabel" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newFieldType">Tipo</label>
+                                <select id="newFieldType" required>
+                                    <option value="text">Texto</option>
+                                    <option value="number">Número</option>
+                                    <option value="date">Data</option>
+                                    <option value="select">Lista de Opções</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-secondary">Adicionar Campo</button>
+                    </form>
+                </div>
+
+                <div class="customization-group">
+                    <h3>Centros de Custo</h3>
+                    <div id="cost-centers-list" class="config-list">
+                        <!-- Cost centers list -->
+                    </div>
+                    <form id="addCostCenterForm" class="add-field-form mt-2">
+                         <div class="form-grid">
+                            <div class="form-group">
+                                <label for="newCostCenterCode">Código</label>
+                                <input type="number" id="newCostCenterCode" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newCostCenterDesc">Descrição</label>
+                                <input type="text" id="newCostCenterDesc" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-secondary">Adicionar Centro de Custo</button>
+                    </form>
+                </div>
             </section>
         </main>
     </div>

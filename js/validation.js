@@ -13,23 +13,33 @@ class Validator {
      */
     validate(data) {
         const errors = [];
-        const config = this.config.fieldConfig;
+
+        // Combine standard and custom fields
+        const allFields = { ...this.config.fieldConfig };
+        this.config.customFields.forEach(field => {
+            allFields[field.id] = field;
+        });
 
         // Iterate through configured fields
-        for (const [key, field] of Object.entries(config)) {
+        for (const [key, field] of Object.entries(allFields)) {
+            // Skip inactive fields
+            if (!field.active) continue;
+
             if (field.required && !data[key]) {
                 errors.push(`${field.label} é obrigatório.`);
             }
 
             // Basic type validation
             if (data[key] && field.type === 'number') {
-                if (isNaN(parseFloat(data[key]))) {
+                // If using comma as decimal separator, replace it before checking
+                const val = data[key].replace(',', '.');
+                if (isNaN(parseFloat(val))) {
                     errors.push(`${field.label} deve ser um número válido.`);
                 }
             }
         }
 
-        // Validate payment method (assuming it's a select field outside of fieldConfig for now)
+        // Validate payment method
         if (!data.paymentMethod) {
             errors.push('Forma de Pagamento é obrigatória.');
         }
