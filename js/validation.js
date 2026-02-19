@@ -39,11 +39,6 @@ class Validator {
             }
         }
 
-        // Validate payment method
-        if (!data.paymentMethod) {
-            errors.push('Forma de Pagamento é obrigatória.');
-        }
-
         return {
             isValid: errors.length === 0,
             errors: errors

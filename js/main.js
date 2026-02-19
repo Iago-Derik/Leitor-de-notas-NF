@@ -103,7 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionStorage.setItem('sinf_current_user', email);
         
         // Initial Renders / Refresh
-        dom.populatePaymentMethods();
         dom.populateStatusSelect();
         dom.renderFields(); // uses loaded custom fields
         
@@ -147,6 +146,17 @@ document.addEventListener('DOMContentLoaded', () => {
         config.savedInvoices = Array.isArray(userData.savedInvoices) ? userData.savedInvoices : [];
         config.customFields = Array.isArray(userData.customFields) ? userData.customFields : [];
         config.costCenters = Array.isArray(userData.costCenters) ? userData.costCenters : [];
+
+        // Apply saved field configurations onto default structure
+        if (userData.fieldConfig) {
+            Object.keys(userData.fieldConfig).forEach(key => {
+                if (config.fieldConfig[key]) {
+                    // Update only specific properties to allow schema updates
+                    config.fieldConfig[key].active = userData.fieldConfig[key].active;
+                    config.fieldConfig[key].required = userData.fieldConfig[key].required;
+                }
+            });
+        }
     }
 
     function saveCurrentUserData() {
@@ -157,7 +167,8 @@ document.addEventListener('DOMContentLoaded', () => {
             webhookUrl: config.currentWebhook,
             savedInvoices: config.savedInvoices,
             customFields: config.customFields,
-            costCenters: config.costCenters
+            costCenters: config.costCenters,
+            fieldConfig: config.fieldConfig // Save standard field config
         };
         storage.saveUserData(config.currentUser, dataToSave);
     }
@@ -354,7 +365,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const index = config.savedInvoices.findIndex(inv => inv.id === data.id);
             if (index >= 0) {
-                config.savedInvoices[index] = data;
+                // Merge existing data with new form data to preserve any non-form fields
+                config.savedInvoices[index] = { ...config.savedInvoices[index], ...data };
                 alert("Nota atualizada e enviada com sucesso!");
             } else {
                 if (!data.status) data.status = 'pendente';
@@ -380,17 +392,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add Custom Field
     const addFieldForm = document.getElementById('addCustomFieldForm');
+    const fieldTypeSelect = document.getElementById('newFieldType');
+    const optionsGroup = document.getElementById('optionsFieldGroup');
+
+    // Toggle options input visibility listener needs to be outside submit or at init
+    // But since the DOM elements exist, the code placed above is fine as long as it runs.
     if (addFieldForm) {
+        // Toggle options input visibility logic
+        // Ensure initial state is hidden (default)
+        if (fieldTypeSelect) {
+            fieldTypeSelect.addEventListener('change', () => {
+                if (fieldTypeSelect.value === 'select') {
+                    if (optionsGroup) optionsGroup.classList.remove('hidden');
+                    const optInput = document.getElementById('newFieldOptions');
+                    if (optInput) optInput.required = true;
+                } else {
+                    if (optionsGroup) optionsGroup.classList.add('hidden');
+                    const optInput = document.getElementById('newFieldOptions');
+                    if (optInput) optInput.required = false;
+                }
+            });
+        }
+
         addFieldForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const label = document.getElementById('newFieldLabel').value;
             const type = document.getElementById('newFieldType').value;
+            const optionsStr = document.getElementById('newFieldOptions').value;
             const id = 'custom_' + Date.now();
+
+            let options = [];
+            if (type === 'select' && optionsStr) {
+                options = optionsStr.split(',').map(opt => opt.trim()).filter(opt => opt);
+            }
 
             config.customFields.push({
                 id: id,
                 label: label,
                 type: type,
+                options: options,
                 required: false,
                 editable: true,
                 active: true
@@ -401,6 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.renderCustomizationPanel();
             dom.renderFields();
             addFieldForm.reset();
+            if (optionsGroup) optionsGroup.classList.add('hidden');
         });
     }
 

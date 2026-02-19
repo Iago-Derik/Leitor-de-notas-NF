@@ -4,7 +4,6 @@ class DOMManager {
     constructor(config) {
         this.config = config;
         this.elements = {
-            paymentSelect: document.getElementById('paymentMethod'),
             statusSelect: document.getElementById('invoiceStatus'),
             dynamicFieldsContainer: document.getElementById('dynamic-fields'),
             loader: document.getElementById('loader'),
@@ -34,23 +33,6 @@ class DOMManager {
         }
     }
 
-
-    /**
-     * 1️⃣ Formas de pagamento dinâmicas
-     * Populates the payment method select box.
-     */
-    populatePaymentMethods() {
-        const select = this.elements.paymentSelect;
-        // Clear existing options except the first one
-        select.innerHTML = '<option value="">Selecione...</option>';
-
-        this.config.paymentMethods.forEach(method => {
-            const option = document.createElement('option');
-            option.value = method;
-            option.textContent = method;
-            select.appendChild(option);
-        });
-    }
 
     /**
      * Populates the status select box.
@@ -120,9 +102,34 @@ class DOMManager {
                     if (value == cc.codigo) option.selected = true;
                     input.appendChild(option);
                 });
+            } else if (fieldConfig.type === 'select' && fieldConfig.id === 'paymentMethod') {
+                input = document.createElement('select');
+                input.innerHTML = '<option value="">Selecione...</option>';
+                this.config.paymentMethods.forEach(method => {
+                    const option = document.createElement('option');
+                    option.value = method;
+                    option.textContent = method;
+                    if (value === method) option.selected = true;
+                    input.appendChild(option);
+                });
             } else if (fieldConfig.type === 'select') {
                 input = document.createElement('select');
-                // Custom select logic would go here
+                
+                // Add default empty option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = "";
+                defaultOption.textContent = "Selecione...";
+                input.appendChild(defaultOption);
+
+                if (fieldConfig.options && Array.isArray(fieldConfig.options)) {
+                    fieldConfig.options.forEach(optVal => {
+                         const option = document.createElement('option');
+                         option.value = optVal;
+                         option.textContent = optVal;
+                         if (value === optVal) option.selected = true;
+                         input.appendChild(option);
+                    });
+                }
             } else {
                 input = document.createElement('input');
                 input.type = fieldConfig.type === 'text' || fieldConfig.type === 'date' ? fieldConfig.type : 'text';

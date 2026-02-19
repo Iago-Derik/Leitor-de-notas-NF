@@ -80,16 +80,8 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="paymentMethod">Forma de Pagamento</label>
-                            <select id="paymentMethod" name="paymentMethod" required>
-                                <option value="">Selecione...</option>
-                                <!-- Options populated by JS -->
-                            </select>
-                        </div>
-
-                        <div class="form-group">
                             <label for="invoiceStatus">Status</label>
-                            <select id="invoiceStatus" name="invoiceStatus" required>
+                            <select id="invoiceStatus" name="status" required>
                                 <!-- Options populated by JS -->
                             </select>
                         </div>
@@ -201,8 +193,10 @@
                                     <option value="date">Data</option>
                                     <option value="select">Lista de Opções</option>
                                 </select>
-                            </div>
-                        </div>
+                            </div>                            <div class="form-group hidden" id="optionsFieldGroup">
+                                <label for="newFieldOptions">Opções (separadas por vírgula)</label>
+                                <input type="text" id="newFieldOptions" placeholder="Ex: Opção 1, Opção 2, Opção 3">
+                            </div>                        </div>
                         <button type="submit" class="btn btn-secondary">Adicionar Campo</button>
                     </form>
                 </div>

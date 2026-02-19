@@ -76,6 +76,14 @@ const Config = {
             required: true,
             editable: true,
             active: true
+        },
+        paymentMethod: {
+            id: "paymentMethod",
+            label: "Forma de Pagamento",
+            type: "select",
+            required: true,
+            editable: true,
+            active: true
         }
     },
 
