@@ -15,7 +15,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial setup
     dom.populatePaymentMethods();
     dom.populateStatusSelect();
+    dom.populateUserSelect();
     dom.renderFields();
+
+    // --- User Selection Logic ---
+    const userSelect = document.getElementById('userSelect');
+    if (userSelect) {
+        userSelect.addEventListener('change', (e) => {
+            config.currentUser = e.target.value;
+            console.log("Usuário alterado para:", config.currentUser);
+        });
+    }
 
     // --- Navigation Logic ---
     const navLinks = document.querySelectorAll('.nav-link');
@@ -65,7 +75,11 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         dropZone.classList.remove('drop-zone--over');
         if (e.dataTransfer.files.length) {
-            handleFileUpload(e.dataTransfer.files[0]);
+            if (e.dataTransfer.files.length > 1) {
+                handleBatchUpload(e.dataTransfer.files);
+            } else {
+                handleFileUpload(e.dataTransfer.files[0]);
+            }
         }
     });
 
@@ -75,9 +89,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
     fileInput.addEventListener('change', (e) => {
         if (fileInput.files.length) {
-            handleFileUpload(fileInput.files[0]);
+            if (fileInput.files.length > 1) {
+                handleBatchUpload(fileInput.files);
+            } else {
+                handleFileUpload(fileInput.files[0]);
+            }
         }
     });
+
+    async function handleBatchUpload(files) {
+        dom.showLoader(`Iniciando processamento em lote de ${files.length} arquivos...`);
+        dom.hideDetails();
+
+        let successCount = 0;
+        let errorCount = 0;
+        const webhookUrl = config.users[config.currentUser];
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            dom.showLoader(`Processando ${i + 1}/${files.length}: ${file.name}`);
+
+            try {
+                // 1. Extract Data
+                const data = await services.lerNotaFiscal(file);
+
+                // Add missing standard fields if extraction failed for them (basic fallback)
+                if (!data.id) data.id = Date.now().toString() + Math.random().toString().substr(2, 5);
+                if (!data.status) data.status = 'pendente';
+
+                // 2. Send to Power Automate
+                await services.sendToPowerAutomate(data, webhookUrl);
+
+                // 3. Save Locally
+                config.savedInvoices.push(data);
+                successCount++;
+
+            } catch (error) {
+                console.error(`Falha ao processar ${file.name}:`, error);
+                errorCount++;
+            }
+        }
+
+        dom.hideLoader();
+        alert(`Processamento finalizado!\nSucesso: ${successCount}\nErros: ${errorCount}`);
+
+        // Go to saved invoices
+        document.querySelector('[data-target="saved-invoices-section"]').click();
+    }
 
     async function handleFileUpload(file) {
         dom.showLoader();
@@ -101,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Form Submission Logic ---
     const form = document.getElementById('invoiceForm');
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
         const formData = dom.getFormData();
@@ -113,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Save Invoice logic
-        saveInvoice(formData);
+        await saveInvoice(formData);
     });
 
     const btnCancel = document.getElementById('btnCancel');
@@ -126,34 +184,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 100);
     });
 
-    function saveInvoice(data) {
+    async function saveInvoice(data) {
         // Basic ID generation
         if (!data.id) {
             data.id = Date.now().toString();
         }
 
-        // Check if editing existing
-        const index = config.savedInvoices.findIndex(inv => inv.id === data.id);
-        if (index >= 0) {
-            config.savedInvoices[index] = data;
-            alert("Nota atualizada com sucesso!");
-        } else {
-            // New invoice
-            // Set default status if not present (should be handled by form default, but just in case)
-            if (!data.status) data.status = 'pendente';
-            config.savedInvoices.push(data);
-            alert("Nota salva com sucesso!");
-        }
-
-        // Reset form and go to Saved Invoices
-        form.reset();
+        // Prepare for sending
         dom.hideDetails();
-        dom.showLoader();
-        setTimeout(() => {
-             dom.hideLoader();
-             // Simulate click on "Saved Invoices"
-             document.querySelector('[data-target="saved-invoices-section"]').click();
-        }, 100);
+        dom.showLoader("Enviando para Power Automate...");
+
+        const webhookUrl = config.users[config.currentUser];
+
+        try {
+            // 1. Send to Power Automate
+            await services.sendToPowerAutomate(data, webhookUrl);
+
+            // 2. Save Locally
+            const index = config.savedInvoices.findIndex(inv => inv.id === data.id);
+            if (index >= 0) {
+                config.savedInvoices[index] = data;
+                alert("Nota atualizada e enviada com sucesso!");
+            } else {
+                // New invoice
+                if (!data.status) data.status = 'pendente';
+                config.savedInvoices.push(data);
+                alert("Nota salva e enviada com sucesso!");
+            }
+
+            // Reset form and go to Saved Invoices
+            form.reset();
+            dom.hideLoader(); // Hide loader before simulating click
+            // Simulate click on "Saved Invoices"
+            document.querySelector('[data-target="saved-invoices-section"]').click();
+
+        } catch (error) {
+            console.error(error);
+            alert(`Erro ao enviar nota: ${error.message}`);
+            dom.hideLoader();
+            dom.showDetails(); // Show form again for retry
+        }
     }
 
     // --- Customization Logic ---
