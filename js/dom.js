@@ -16,8 +16,24 @@ class DOMManager {
             fieldsConfigList: document.getElementById('fields-config-list'),
             costCentersList: document.getElementById('cost-centers-list'),
             addCustomFieldForm: document.getElementById('addCustomFieldForm'),
-            addCostCenterForm: document.getElementById('addCostCenterForm')
+            addCostCenterForm: document.getElementById('addCostCenterForm'),
+            userSelect: document.getElementById('userSelect'),
+            loaderText: document.getElementById('loader-text')
         };
+    }
+
+    populateUserSelect() {
+        const select = this.elements.userSelect;
+        select.innerHTML = '';
+        Object.keys(this.config.users).forEach(email => {
+            const option = document.createElement('option');
+            option.value = email;
+            option.textContent = email;
+            if (email === this.config.currentUser) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
     }
 
     /**
@@ -118,6 +134,13 @@ class DOMManager {
 
             if (fieldConfig.type !== 'select') {
                 input.value = value;
+                if (fieldConfig.id === 'valor' && value) {
+                    // Pre-format if value exists
+                    // Convert to string representation that formatCurrency expects (int string)
+                    // If value is 1500.00, we need "150000"
+                    const valStr = parseFloat(value).toFixed(2).replace('.', '').replace(',', '');
+                    input.value = this.formatCurrency(valStr);
+                }
             }
 
             if (fieldConfig.required) {
@@ -253,7 +276,10 @@ class DOMManager {
         });
     }
 
-    showLoader() {
+    showLoader(message = "Processando nota fiscal...") {
+        if (this.elements.loaderText) {
+            this.elements.loaderText.textContent = message;
+        }
         this.elements.loader.classList.remove('hidden');
         this.elements.dropZone.classList.add('hidden');
     }

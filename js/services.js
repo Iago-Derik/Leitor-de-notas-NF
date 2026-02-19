@@ -42,6 +42,39 @@ class InvoiceService {
             throw error;
         }
     }
+
+    /**
+     * Envia os dados da nota para o Power Automate via Webhook.
+     * @param {Object} invoiceData - Os dados da nota fiscal.
+     * @param {string} webhookUrl - A URL do webhook do Power Automate.
+     */
+    async sendToPowerAutomate(invoiceData, webhookUrl) {
+        if (!webhookUrl) {
+            throw new Error("URL do Webhook não configurada para este usuário.");
+        }
+
+        console.log("Sending to Power Automate:", invoiceData);
+
+        try {
+            const response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(invoiceData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`Erro no envio para Power Automate: ${response.status} ${response.statusText}`);
+            }
+
+            console.log("Successfully sent to Power Automate");
+            return true;
+        } catch (error) {
+            console.error("Failed to send to Power Automate:", error);
+            throw error;
+        }
+    }
 }
 
 // Expose the service

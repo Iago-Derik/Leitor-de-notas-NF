@@ -1,6 +1,14 @@
 // js/config.js
 
 const Config = {
+    // 0️⃣ Configuração de Usuários
+    users: {
+        "admin@empresa.com": "https://prod-00.brazilsouth.logic.azure.com:443/workflows/sample-admin",
+        "financeiro@empresa.com": "https://prod-00.brazilsouth.logic.azure.com:443/workflows/sample-financeiro",
+        "iago@empresa.com": "https://prod-00.brazilsouth.logic.azure.com:443/workflows/sample-iago"
+    },
+    currentUser: "admin@empresa.com",
+
     // 1️⃣ Formas de pagamento dinâmicas
     paymentMethods: [
         "Boleto Bancário",

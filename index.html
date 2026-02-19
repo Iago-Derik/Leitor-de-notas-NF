@@ -15,6 +15,12 @@
                 <h2>SINF</h2>
                 <p>Sistema Inteligente</p>
             </div>
+            <div class="user-select-container" style="padding: 0 1.5rem; margin-bottom: 1rem;">
+                <label for="userSelect" style="color: rgba(255,255,255,0.7); font-size: 0.8rem; display: block; margin-bottom: 0.3rem;">Usuário Ativo</label>
+                <select id="userSelect" style="width: 100%; padding: 0.3rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px;">
+                    <!-- Populated by JS -->
+                </select>
+            </div>
             <nav class="sidebar-nav">
                 <ul>
                     <li><a href="#" class="nav-link active" data-target="upload-section">📄 Nova Nota</a></li>
@@ -36,11 +42,11 @@
                 <div class="upload-area">
                     <div class="drop-zone" id="drop-zone">
                         <span class="drop-zone__prompt">Arraste o arquivo aqui ou clique para selecionar</span>
-                        <input type="file" name="file" class="drop-zone__input" id="fileInput" accept=".xml, .pdf">
+                        <input type="file" name="file" class="drop-zone__input" id="fileInput" accept=".xml, .pdf" multiple>
                     </div>
                     <div id="loader" class="loader hidden">
                         <div class="spinner"></div>
-                        <p>Processando nota fiscal...</p>
+                        <p id="loader-text">Processando nota fiscal...</p>
                     </div>
                 </div>
 
