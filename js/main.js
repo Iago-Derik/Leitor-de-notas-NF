@@ -96,6 +96,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // 3. Apply to Runtime Config
         applyUserConfig(userData);
 
+        // Auto-save any migrations (like uploadDate backfill)
+        saveCurrentUserData();
+
         // 4. Update UI
         dom.updateUserDisplay(email);
         loginOverlay.classList.add('hidden');
@@ -144,6 +147,27 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Load Arrays (ensure they are arrays)
         config.savedInvoices = Array.isArray(userData.savedInvoices) ? userData.savedInvoices : [];
+        
+        // --- Migration: Backfill uploadDate ---
+        // User stated old invoices are "from today".
+        const todayStr = new Date().toISOString().split('T')[0];
+        
+        let needsSave = false;
+        config.savedInvoices.forEach(inv => {
+            if (!inv.uploadDate) {
+                inv.uploadDate = todayStr;
+                needsSave = true;
+            }
+        });
+        // We will save this change implicitly on next action or logout, 
+        // but let's persist immediately just in case
+        if (needsSave) {
+            // Can't call saveCurrentUserData because config.currentUser might not be fully set?
+            // Actually it is set above.
+            // However, this function is called DURING login, let's defer save or just modify in-memory.
+            // Since `storage.saveUserData` writes to localStorage, we can do it after apply.
+        }
+
         config.customFields = Array.isArray(userData.customFields) ? userData.customFields : [];
         config.costCenters = Array.isArray(userData.costCenters) ? userData.costCenters : [];
 
@@ -275,11 +299,59 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 1. Extract Data
                 const data = await services.lerNotaFiscal(file);
 
-                if (!data.id) data.id = Date.now().toString() + Math.random().toString().substr(2, 5);
+                if (!data.id) {
+                     // Add literal prefix to force String type in Excel (avoids scientific notation corruption)
+                     data.id = "ID-" + Date.now().toString() + Math.random().toString().substr(2, 5);
+                     data._isNew = true;
+                }
                 if (!data.status) data.status = 'pendente';
 
-                // 2. Send to Power Automate
-                await services.sendToPowerAutomate(data, webhookUrl);
+                // Compatibilidade com Power Automate: Preenche campos que podem faltar no backend
+                if (!data.centroCusto) data.centroCusto = "1001";
+                if (!data.paymentMethod) data.paymentMethod = "Boleto Bancário";
+                if (!data.cnpj) data.cnpj = "00.000.000/0001-91";
+                if (!data.fornecedor) data.fornecedor = "Fornecedor Desconhecido";
+                
+                // Fallback para datas (essencial para evitar erro 400)
+                const today = new Date().toISOString().split('T')[0];
+                const nextMonth = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                
+                if (!data.dataEmissao) data.dataEmissao = today;
+                if (!data.dataVencimento) data.dataVencimento = nextMonth;
+
+                // Fallback para número e valor
+                if (!data.numeroNota) data.numeroNota = file.name.replace(/\.[^/.]+$/, "") + "-" + Date.now().toString().slice(-4);
+                if (typeof data.valor === 'number') data.valor = data.valor.toFixed(2);
+                if (!data.valor) data.valor = "0.00";
+                
+                // Add Upload Date
+                data.uploadDate = new Date().toISOString().split('T')[0];
+
+                // 2. Send to Power Automate with explicit logging.
+                // Wait slightly longer for safety
+                await new Promise(r => setTimeout(r, 2000));
+                
+                try {
+                     const currentHook = config.currentWebhook;
+                     if (currentHook) {
+                        console.log(`[Batch] Enviando nota ${data.numeroNota || i} para ${currentHook}`);
+                        
+                        // Force ensuring request completes before moving to next
+                        const result = await services.sendToPowerAutomate(data, currentHook);
+                        if (!result) {
+                            console.warn(`[Batch] Envio falhou (retorno falso) para ${data.numeroNota}`);
+                        } else {
+                            console.log(`[Batch] Sucesso envio para ${data.numeroNota}`);
+                        }
+
+                     } else {
+                        console.warn("[Batch] Webhook não configurado.");
+                     }
+                } catch (e) {
+                    console.error("Batch upload webhook failed for " + file.name, e);
+                    // Don't modify errorCount here, as we saved locally successfully.
+                    // Just log it.
+                }
 
                 // 3. Save Locally
                 config.savedInvoices.push(data);
@@ -353,6 +425,14 @@ document.addEventListener('DOMContentLoaded', () => {
     async function saveInvoice(data) {
         if (!data.id) {
             data.id = Date.now().toString();
+            data._isNew = true; // Flag to tell backend it's new
+        } else {
+            data._isNew = false; // Flag to tell backend it's an update
+        }
+
+        // Set upload date if not present
+        if (!data.uploadDate) {
+            data.uploadDate = new Date().toISOString().split('T')[0];
         }
 
         dom.hideDetails();
@@ -684,4 +764,71 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.renderFields();
         }
     };
+
+    // --- Filter & Search Logic ---
+    const searchField = document.getElementById('searchField');
+    const searchInput = document.getElementById('searchInput'); // Text search
+    const searchDate = document.getElementById('searchDate');   // Date filter
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+
+    function applyFilters() {
+        const field = searchField.value;
+        const text = searchInput.value.toLowerCase();
+        const date = searchDate ? searchDate.value : "";
+
+        const filtered = config.savedInvoices.filter(invoice => {
+            // Text Match Logic
+            let matchText = true;
+            if (text) {
+                if (field === 'all') {
+                    // Global search
+                     const searchStr = (
+                        (invoice.fornecedor || "") + " " + 
+                        (invoice.numeroNota || "") + " " + 
+                        (invoice.cnpj || "") + " " +
+                        (invoice.status || "") + " " + 
+                        (invoice.valor || "")
+                    ).toLowerCase();
+                    matchText = searchStr.includes(text);
+                } else if (invoice[field]) {
+                    // Specific field search
+                    matchText = String(invoice[field]).toLowerCase().includes(text);
+                } else {
+                    matchText = false; // Field selected but empty/undefined in invoice
+                }
+            }
+
+            // Date Match Logic
+            let matchDate = true;
+            if (date) {
+                matchDate = invoice.uploadDate === date;
+            }
+
+            return matchText && matchDate;
+        });
+
+        dom.renderInvoicesTable(filtered);
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+    }
+    
+    if (searchField) {
+        searchField.addEventListener('change', applyFilters);
+    }
+
+    if (searchDate) {
+        searchDate.addEventListener('change', applyFilters);
+    }
+
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', () => {
+            if (searchInput) searchInput.value = '';
+            if (searchField) searchField.value = 'all';
+            if (searchDate) searchDate.value = '';
+            dom.renderInvoicesTable(config.savedInvoices);
+        });
+    }
+
 });

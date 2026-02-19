@@ -97,6 +97,30 @@
             <!-- Section: Saved Invoices (New) -->
             <section id="saved-invoices-section" class="content-section hidden">
                 <h2>Notas Salvas</h2>
+                
+                <!-- Filters -->
+                <div class="filters-panel" style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); align-items: center;">
+                    <div style="flex: 0 0 auto;">
+                        <select id="searchField" style="width: auto;">
+                            <option value="all">Todas as Colunas</option>
+                            <option value="fornecedor">Fornecedor</option>
+                            <option value="numeroNota">Número da Nota</option>
+                            <option value="cnpj">CNPJ</option>
+                            <option value="valor">Valor</option>
+                            <option value="status">Status</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <input type="text" id="searchInput" placeholder="Digite para pesquisar..." style="width: 100%;">
+                    </div>
+                    <div style="flex: 0 0 auto;">
+                        <input type="date" id="searchDate" title="Filtrar por Data de Upload">
+                    </div>
+                    <div>
+                        <button id="clearFiltersBtn" class="btn btn-secondary btn-sm">Limpar Filtros</button>
+                    </div>
+                </div>
+
                 <div class="table-container">
                     <table id="invoicesTable" class="data-table">
                         <thead>

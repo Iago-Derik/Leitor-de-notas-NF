@@ -204,7 +204,35 @@ class DOMManager {
             return;
         }
 
-        invoices.forEach(invoice => {
+        // Sort invoices by uploadDate descending (newest first)
+        const sortedInvoices = [...invoices].sort((a, b) => {
+            const dateA = a.uploadDate || '';
+            const dateB = b.uploadDate || '';
+            return dateB.localeCompare(dateA);
+        });
+
+        let currentUploadDate = null;
+
+        sortedInvoices.forEach(invoice => {
+            // Group Header Logic
+            const invoiceDate = invoice.uploadDate || 'Sem Data';
+            
+            if (invoiceDate !== currentUploadDate) {
+                currentUploadDate = invoiceDate;
+                
+                // Format Date for Header
+                let dateDisplay = 'Sem Data';
+                if (invoice.uploadDate) {
+                    const [y, m, d] = invoice.uploadDate.split('-');
+                    dateDisplay = `📅 Enviado em: ${d}/${m}/${y}`;
+                }
+
+                const headerRow = document.createElement('tr');
+                headerRow.className = 'table-group-header';
+                headerRow.innerHTML = `<td colspan="8" style="background-color: #e9ecef; font-weight: bold; color: #495057; padding: 10px 15px;">${dateDisplay}</td>`;
+                tbody.appendChild(headerRow);
+            }
+
             const row = document.createElement('tr');
 
             const costCenter = this.config.costCenters.find(c => c.codigo == invoice.centroCusto);

@@ -103,10 +103,8 @@ class InvoiceService {
             console.log("Successfully sent to Power Automate");
             return true;
         } catch (error) {
-            console.error("Failed to send to Power Automate (continuing anyway for demo):", error);
-            // Don't throw error to allow local save to proceed even if webhook fails
-            // throw error; 
-            return false; 
+            console.error("Failed to send to Power Automate:", error);
+            throw error; // Propagate error so main.js handles it
         }
     }
 }
