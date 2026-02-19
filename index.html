@@ -25,6 +25,7 @@
                 <ul>
                     <li><a href="#" class="nav-link active" data-target="upload-section">📄 Nova Nota</a></li>
                     <li><a href="#" class="nav-link" data-target="saved-invoices-section">📂 Notas Salvas</a></li>
+                    <li><a href="#" class="nav-link" data-target="users-section">👥 Usuários</a></li>
                     <li><a href="#" class="nav-link" data-target="customization-section">⚙️ Personalização</a></li>
                 </ul>
             </nav>
@@ -105,10 +106,50 @@
                 </div>
             </section>
 
+            <!-- Section: Users (New) -->
+            <section id="users-section" class="content-section hidden">
+                <h2>Gerenciamento de Usuários</h2>
+                
+                <div class="customization-group">
+                    <h3>Adicionar Novo Usuário</h3>
+                    <form id="addUserForm" class="add-field-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="newUserEmail">E-mail (Identificador)</label>
+                                <input type="email" id="newUserEmail" placeholder="usuario@empresa.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newUserWebhook">URL do Webhook (Power Automate)</label>
+                                <input type="url" id="newUserWebhook" placeholder="https://..." required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Adicionar Usuário</button>
+                    </form>
+                </div>
+
+                <div class="customization-group">
+                    <h3>Usuários Cadastrados</h3>
+                    <div class="table-container">
+                        <table id="usersTable" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>E-mail</th>
+                                    <th>Webhook Configurado</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <!-- Section: Customization (New) -->
             <section id="customization-section" class="content-section hidden">
                 <h2>Personalização</h2>
-
+                
                 <div class="customization-group">
                     <h3>Campos do Formulário</h3>
                     <div id="fields-config-list" class="config-list">

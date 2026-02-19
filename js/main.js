@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const config = window.AppConfig;
     const services = new window.InvoiceService(config);
     const dom = new window.DOMManager(config);
+    window.domManager = dom; // Expose for global functions
     const validator = new window.Validator(config);
 
     // Initial setup
@@ -54,6 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom.renderInvoicesTable(config.savedInvoices);
             } else if (targetId === 'customization-section') {
                 dom.renderCustomizationPanel();
+            } else if (targetId === 'users-section') {
+                window.renderUsersTable();
             }
         });
     });
@@ -127,11 +130,17 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error(`Falha ao processar ${file.name}:`, error);
                 errorCount++;
+                // Optional: visual feedback for individual failure
             }
         }
 
         dom.hideLoader();
-        alert(`Processamento finalizado!\nSucesso: ${successCount}\nErros: ${errorCount}`);
+        
+        let msg = `Processamento finalizado!\nSucesso: ${successCount}\nErros: ${errorCount}`;
+        if (errorCount > 0) {
+            msg += "\n\nVerifique se o backend (Python) está rodando na porta 5001.";
+        }
+        alert(msg);
 
         // Go to saved invoices
         document.querySelector('[data-target="saved-invoices-section"]').click();
@@ -225,6 +234,68 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.showDetails(); // Show form again for retry
         }
     }
+
+    // --- User Management Logic ---
+
+    const addUserForm = document.getElementById('addUserForm');
+    if (addUserForm) {
+        addUserForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('newUserEmail').value;
+            const webhook = document.getElementById('newUserWebhook').value;
+
+            if (config.users[email]) {
+                alert("Usuário já existe!");
+                return;
+            }
+
+            config.users[email] = webhook;
+            alert("Usuário adicionado com sucesso!");
+            addUserForm.reset();
+            window.renderUsersTable();
+            if (window.domManager) window.domManager.populateUserSelect(); // Update sidebar dropdown
+        });
+    }
+
+    window.renderUsersTable = () => {
+        const tbody = document.querySelector('#usersTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        Object.entries(config.users).forEach(([email, webhook]) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${email}</td>
+                <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${webhook}">${webhook}</td>
+                <td>
+                    <button class="btn-icon delete" onclick="deleteUser('${email}')" title="Excluir">🗑️</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    window.deleteUser = (email) => {
+        if (confirm(`Tem certeza que deseja excluir o usuário ${email}?`)) {
+            const userKeys = Object.keys(config.users);
+            if (userKeys.length <= 1) {
+                alert("Não é possível excluir o último usuário!");
+                return;
+            }
+            
+            delete config.users[email];
+            
+            // If deleting current user, switch to first available
+            if (config.currentUser === email) {
+                // Get fresh keys after delete
+                const remaining = Object.keys(config.users);
+                config.currentUser = remaining[0];
+            }
+            
+            window.renderUsersTable();
+            if (window.domManager) window.domManager.populateUserSelect();
+        }
+    };
 
     // --- Customization Logic ---
 

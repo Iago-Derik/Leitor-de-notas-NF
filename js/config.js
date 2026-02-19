@@ -101,9 +101,9 @@ const Config = {
 
     // API Configuration
     api: {
-        baseUrl: 'http://localhost:5001/api',
+        baseUrl: 'http://127.0.0.1:5001',
         endpoints: {
-            upload: '/ler-nota'
+            upload: '/api/ler-nota'
         }
     }
 };
