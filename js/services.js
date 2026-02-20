@@ -71,7 +71,7 @@ class InvoiceService {
     async callGeminiFlash(apiKey, base64Data, mimeType) {
         // Dynamic import if not available on window (though index.html should provide it)
         const genAI = new window.GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemma-3-12b-it" });
 
         const prompt = `
         Analise esta nota fiscal (imagem ou documento). Extraia os dados cruciais em JSON estrito.
