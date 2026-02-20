@@ -6,21 +6,118 @@ class InvoiceService {
     }
 
     /**
-     * 3️⃣ Estrutura preparada para integração com API
-     * Simulates uploading a file and receiving extracted data.
-     * In a real scenario, this would use fetch() to send the file to the backend.
+     * 3️⃣ Processamento Local com Google Gemini (Serverless)
+     * Lê o arquivo PDF/Imagem, converte para Base64 e envia para a API do Google.
      * 
-     * @param {File} file - The file object from the input.
-     * @returns {Promise<Object>} - A promise resolving to the extracted invoice data.
+     * @param {File} file - O arquivo (PDF ou Imagem)
+     * @returns {Promise<Object>} - Dados extraídos
      */
     async lerNotaFiscal(file) {
-        console.log(`Starting upload for file: ${file.name}`);
+        console.log(`Iniciando processamento local com Gemini para: ${file.name}`);
+        
+        // 1. Validar API Key
+        // Tenta pegar do Config (se implementado) ou usa a fixa de teste
+        let apiKey = this.config.googleApiKey || localStorage.getItem('google_api_key') || 'AIzaSyA4XbKD84SIqsW_m3XP0QZ0c4psUl2NkIw';
+        
+        if (!apiKey) {
+            // Fallback apenas se a fixa for removida
+            apiKey = prompt("Para processar sem servidor, insira sua Google API Key (Gemini):");
+            if (apiKey) {
+                localStorage.setItem('google_api_key', apiKey);
+                // Opcional: Salvar no config runtime se desejar
+                if(this.config) this.config.googleApiKey = apiKey; 
+            } else {
+                alert("API Key necessária para processamento. Usando dados mockados.");
+                return this.mockExtractData(file);
+            }
+        }
+
         try {
-            return await this.uploadToBackend(file);
+            // 2. Converter Arquivo para Base64
+            const base64Data = await this.fileToBase64(file);
+            const mimeType = file.type;
+
+            // 3. Chamar Gemini
+            return await this.callGeminiFlash(apiKey, base64Data, mimeType);
+
         } catch (error) {
-            console.warn("Backend unavailable or upload failed. Falling back to mock data.", error);
-            // Fallback for demonstration/offline mode
+            console.error("Erro no Gemini Local:", error);
+            alert("Erro ao processar com IA: " + error.message + ". Usando dados de teste.");
             return this.mockExtractData(file);
+        }
+    }
+
+    /**
+     * Helper to read file as Base64 for Gemini API (supports PDF/Image)
+     */
+    fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                let encoded = reader.result.toString().replace(/^data:(.*,)?/, '');
+                if ((encoded.length % 4) > 0) {
+                    encoded += '='.repeat(4 - (encoded.length % 4));
+                }
+                resolve(encoded);
+            };
+            reader.onerror = error => reject(error);
+            reader.readAsDataURL(file);
+        });
+    }
+
+    /**
+     * Calls Google Gemini Flash 2.0 API directly from browser
+     */
+    async callGeminiFlash(apiKey, base64Data, mimeType) {
+        // Dynamic import if not available on window (though index.html should provide it)
+        const genAI = new window.GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+        const prompt = `
+        Analise esta nota fiscal (imagem ou documento). Extraia os dados cruciais em JSON estrito.
+        Não use markdown. Responda apenas o JSON.
+        Campos: numeroNota (string), cnpj (formatado), fornecedor (string), valor (number float ex: 150.50), dataEmissao (YYYY-MM-DD), dataVencimento (YYYY-MM-DD).
+        `;
+
+        const result = await model.generateContent([
+            prompt,
+            {
+                inlineData: {
+                    data: base64Data,
+                    mimeType: mimeType
+                }
+            }
+        ]);
+        
+        const response = await result.response;
+        const text = response.text();
+        console.log("Gemini Raw Response:", text);
+        
+        return this.parseGeminiJson(text);
+    }
+    
+    parseGeminiJson(text) {
+        try {
+            // Remove markdown code blocks if present
+            let cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const data = JSON.parse(cleanText);
+            
+            // Post-processing to match app structure
+            return {
+                id: Date.now().toString(),
+                numeroNota: data.numeroNota || "",
+                cnpj: data.cnpj || "",
+                fornecedor: data.fornecedor || "",
+                valor: data.valor || 0,
+                dataEmissao: data.dataEmissao || new Date().toISOString().split('T')[0],
+                dataVencimento: data.dataVencimento || new Date(Date.now() + 86400000 * 15).toISOString().split('T')[0],
+                centroCusto: "1001",
+                status: "pendente",
+                paymentMethod: "Boleto Bancário"
+            };
+        } catch (e) {
+            console.error("Failed to parse Gemini JSON", e);
+            throw e;
         }
     }
 

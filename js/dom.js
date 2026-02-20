@@ -141,10 +141,19 @@ class DOMManager {
             if (fieldConfig.type !== 'select') {
                 input.value = value;
                 if (fieldConfig.id === 'valor' && value) {
-                    // Pre-format if value exists
-                    // Convert to string representation that formatCurrency expects (int string)
-                    // If value is 1500.00, we need "150000"
-                    const valStr = parseFloat(value).toFixed(2).replace('.', '').replace(',', '');
+                    let valStr = String(value);
+
+                    // Se já estiver formatado como moeda (ex: R$ 1.500,00 ou 1.500,00)
+                    // Removemos tudo que não é dígito para obter os centavos brutos (ex: 150000)
+                    if (valStr.includes('R$') || valStr.includes(',')) {
+                        valStr = valStr.replace(/\D/g, '');
+                    } else {
+                        // Se for um número float/int puro (ex: 1500.0 ou 1050.50)
+                        // A função formatCurrency espera centavos inteiros (ex: 150000 para 1500.00)
+                        valStr = (Number(value) * 100).toFixed(0); 
+                    }
+                    
+                    // Aplica a formatação visual
                     input.value = this.formatCurrency(valStr);
                 }
             }
