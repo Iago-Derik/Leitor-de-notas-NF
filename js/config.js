@@ -111,7 +111,7 @@ const Config = {
         // Lógica simples para alternar entre local e produção
         baseUrl: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') 
             ? 'http://127.0.0.1:5001' 
-            : 'https://leitor-de-notas-nf-1.onrender.com', // ⚠️ Substitua pela URL real após o deploy
+            : 'https://vzfcqsxv-5001.brs.devtunnels.ms/', // ⚠️ Substitua pela URL real após o deploy
         endpoints: {
             upload: '/api/ler-nota'
         }
