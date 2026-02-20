@@ -208,7 +208,7 @@ class DOMManager {
 
         if (invoices.length === 0) {
             const row = document.createElement('tr');
-            row.innerHTML = `<td colspan="8" style="text-align:center">Nenhuma nota salva.</td>`;
+            row.innerHTML = `<td colspan="9" style="text-align:center">Nenhuma nota salva.</td>`;
             tbody.appendChild(row);
             return;
         }
@@ -238,11 +238,25 @@ class DOMManager {
 
                 const headerRow = document.createElement('tr');
                 headerRow.className = 'table-group-header';
-                headerRow.innerHTML = `<td colspan="8" style="background-color: #e9ecef; font-weight: bold; color: #495057; padding: 10px 15px;">${dateDisplay}</td>`;
+                // Increased colspan to 9 due to checkbox column
+                headerRow.innerHTML = `<td colspan="9" style="background-color: #e9ecef; font-weight: bold; color: #495057; padding: 10px 15px;">${dateDisplay}</td>`;
                 tbody.appendChild(headerRow);
             }
 
             const row = document.createElement('tr');
+            row.setAttribute('data-invoice-id', invoice.id);
+            row.className = 'invoice-row';
+            
+            // Toggle checkbox on row click (delegated or direct)
+            row.onclick = (e) => {
+                // Ignore if clicking on buttons or links
+                if (e.target.closest('button') || e.target.closest('a') || e.target.type === 'checkbox') return;
+                
+                const checkbox = row.querySelector('.invoice-select');
+                checkbox.checked = !checkbox.checked;
+                // Dispatch input event to trigger any change listeners (like "select all" state update)
+                checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            };
 
             const costCenter = this.config.costCenters.find(c => c.codigo == invoice.centroCusto);
             const costCenterText = costCenter ? `${costCenter.codigo} - ${costCenter.descricao}` : invoice.centroCusto;
@@ -250,6 +264,9 @@ class DOMManager {
             const statusConfig = this.config.invoiceStatus.find(s => s.id === invoice.status) || { label: invoice.status, color: 'secondary' };
 
             row.innerHTML = `
+                <td class="checkbox-cell" style="text-align: center;">
+                    <input type="checkbox" class="invoice-select" value="${invoice.id}">
+                </td>
                 <td>${invoice.numeroNota || '-'}</td>
                 <td>${invoice.cnpj || '-'}</td>
                 <td>${invoice.fornecedor || '-'}</td>

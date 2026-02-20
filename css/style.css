@@ -427,3 +427,27 @@ input[readonly] {
     background-color: rgba(220, 53, 69, 0.1);
 }
 
+
+/* Bulk Action Styles */
+.checkbox-cell {
+    width: 40px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.invoice-select {
+    opacity: 0;
+    transition: opacity 0.2s;
+    cursor: pointer;
+    transform: scale(1.2);
+}
+
+tr:hover .invoice-select,
+.invoice-select:checked {
+    opacity: 1;
+}
+
+tr.selected {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+

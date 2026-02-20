@@ -130,6 +130,7 @@
                         <input type="date" id="searchDate" title="Filtrar por Data de Upload">
                     </div>
                     <div>
+                        <button id="deleteSelectedBtn" class="btn btn-danger btn-sm hidden">Excluir Selecionados</button>
                         <button id="clearFiltersBtn" class="btn btn-secondary btn-sm">Limpar Filtros</button>
                     </div>
                 </div>
@@ -138,6 +139,7 @@
                     <table id="invoicesTable" class="data-table">
                         <thead>
                             <tr>
+                                <th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAllInvoices" title="Selecionar Todos"></th>
                                 <th>Número</th>
                                 <th>CNPJ</th>
                                 <th>Fornecedor</th>

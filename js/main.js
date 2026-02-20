@@ -729,8 +729,87 @@ document.addEventListener('DOMContentLoaded', () => {
             config.savedInvoices = config.savedInvoices.filter(inv => inv.id !== id);
             saveCurrentUserData();
             dom.renderInvoicesTable(config.savedInvoices);
+            updateBulkActionUI(); // Refresh UI state
         }
     };
+
+    // --- Bulk Actions Logic ---
+
+    const selectAllCheckbox = document.getElementById('selectAllInvoices');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+    const tableBody = document.querySelector('#invoicesTable tbody');
+
+    function updateBulkActionUI() {
+        const checkboxes = Array.from(tableBody.querySelectorAll('.invoice-select'));
+        const selectedCheckboxes = checkboxes.filter(cb => cb.checked);
+        
+        // Update Select All Checkbox state
+        if (checkboxes.length > 0) {
+            const allChecked = checkboxes.every(cb => cb.checked);
+            const someChecked = checkboxes.some(cb => cb.checked);
+            selectAllCheckbox.checked = allChecked;
+            selectAllCheckbox.indeterminate = someChecked && !allChecked;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        }
+
+        // Update Delete Button Visibility
+        if (selectedCheckboxes.length > 0) {
+            deleteSelectedBtn.classList.remove('hidden');
+            deleteSelectedBtn.textContent = `Excluir Selecionados (${selectedCheckboxes.length})`;
+        } else {
+            deleteSelectedBtn.classList.add('hidden');
+        }
+
+        // Update Row Styles
+        checkboxes.forEach(cb => {
+            const row = cb.closest('tr');
+            if (cb.checked) row.classList.add('selected');
+            else row.classList.remove('selected');
+        });
+    }
+
+    if (selectAllCheckbox && tableBody) {
+        // Toggle All
+        selectAllCheckbox.addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            const checkboxes = tableBody.querySelectorAll('.invoice-select');
+            checkboxes.forEach(cb => cb.checked = isChecked);
+            updateBulkActionUI();
+        });
+
+        // Delegate change event for individual checkboxes
+        tableBody.addEventListener('change', (e) => {
+            if (e.target.classList.contains('invoice-select')) {
+                updateBulkActionUI(); 
+            }
+        });
+
+        // Hook into Delete Button
+        if (deleteSelectedBtn) {
+            deleteSelectedBtn.addEventListener('click', () => {
+                const selectedCheckboxes = tableBody.querySelectorAll('.invoice-select:checked');
+                const count = selectedCheckboxes.length;
+                
+                if (count === 0) return;
+                
+                if (confirm(`Tem certeza que deseja excluir ${count} nota(s) selecionada(s)?`)) {
+                    const idsToDelete = Array.from(selectedCheckboxes).map(cb => cb.value);
+                    
+                    // Filter out from saved invoices
+                    config.savedInvoices = config.savedInvoices.filter(inv => !idsToDelete.includes(inv.id));
+                    
+                    saveCurrentUserData();
+                    dom.renderInvoicesTable(config.savedInvoices);
+                    
+                    // Reset UI
+                    selectAllCheckbox.checked = false;
+                    updateBulkActionUI();
+                }
+            });
+        }
+    }
 
     window.toggleField = (id, property) => {
         if (config.fieldConfig[id]) {
