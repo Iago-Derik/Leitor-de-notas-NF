@@ -7,3 +7,6 @@ python-multipart==0.0.6
 gunicorn
 flask-cors
 python-dotenv
+google-genai
+httpx
+PyPDF2
