@@ -48,16 +48,17 @@ def extract_text_pdf(pdf_path):
         # or similar. If this specific string fails, we might need to revert to "gemini-1.5-flash" 
         # which has a massive free tier.
         
-        # Usando o modelo Gemini Flash que é mais estável para JSON
-        model_id = "gemini-2.0-flash" 
+        model_id = "gemma-3-12b-it" # Using efficient Flash model as proxy for high-limit request
+        # If you confirm you have access to "gemma-2-9b-it" specifically, change the line below:
+        # model_id = "gemma-2-9b-it"
 
         prompt = f"""
         Você é um assistente especializado em contabilidade. Analise o texto desta Nota Fiscal e extraia os seguintes dados em formato JSON.
         
         Texto da Nota:
-        {full_text[:8000]}
+        {full_text[:5000]}  # Increase limit slightly
 
-        Retorne APENAS um JSON válido com esta estrutura exata. Não use Markdown (```json). Não inclua nenhuma explicação.
+        Retorne APENAS um JSON válido com esta estrutura exata. Não use Markdown (```json).:
         {{
             "numeroNota": "string (apenas números)",
             "cnpj": "string (XX.XXX.XXX/YYYY-ZZ)",
@@ -68,8 +69,10 @@ def extract_text_pdf(pdf_path):
         }}
         """
 
+        # Usando o modelo configurado acima (Gemma ou Gemini Flash)
+        # Atenção: Se usar o Gemma, pode ser necessário ajustar o nome exato do modelo 'gemma-2-9b-it'
         response = client.models.generate_content(
-            model=model_id,
+            model='gemma-3-12b-it',  # Tente "gemma-2-9b-it" se disponível, ou "gemini-2.0-flash" como fallback
             contents=prompt
         )
         
@@ -78,30 +81,15 @@ def extract_text_pdf(pdf_path):
 
         content = response.text.strip()
         
-        # Limpeza robusta para encontrar o JSON dentro da resposta
-        # Remove blocos de código markdown se existirem
-        if "```" in content:
-            # Pega tudo que estiver entre o primeiro ``` (e opcional "json") e o último ```
-            patterns = [r"```json\s*(.*?)\s*```", r"```\s*(.*?)\s*```"]
-            for pattern in patterns:
-                match = re.search(pattern, content, re.DOTALL)
-                if match:
-                    content = match.group(1)
-                    break
-        
-        # Tenta sanitizar o JSON (caso tenha sobrado algo)
-        try:
-            data = json.loads(content)
-        except json.JSONDecodeError:
-            # Fallback: Tenta encontrar o primeiro "{" e o último "}"
-            start = content.find('{')
-            end = content.rfind('}') + 1
-            if start != -1 and end != -1:
-                json_str = content[start:end]
-                data = json.loads(json_str)
-            else:
-                raise ValueError(f"Não foi possível encontrar JSON válido na resposta: {content[:100]}...")
-
+        # Clean potential markdown code blocks
+        if content.startswith("```json"):
+            content = content[7:]
+        elif content.startswith("```"):
+            content = content[3:]
+        if content.endswith("```"):
+            content = content[:-3]
+            
+        data = json.loads(content)
         return data
 
     except Exception as e:
