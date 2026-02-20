@@ -71,6 +71,7 @@ class InvoiceService {
     async callGeminiFlash(apiKey, base64Data, mimeType) {
         // Dynamic import if not available on window (though index.html should provide it)
         const genAI = new window.GoogleGenerativeAI(apiKey);
+        // Usando o modelo Gemma 3 12B IT (conforme solicitado e configurado)
         const model = genAI.getGenerativeModel({ model: "gemma-3-12b-it" });
 
         const prompt = `
