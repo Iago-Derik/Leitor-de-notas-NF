@@ -1,0 +1,743 @@
+App:
+  Properties:
+    StartScreen: =DashboardScreen
+    Theme: =PowerAppsTheme
+
+DataSources:
+  Registro_de_Notas_Fiscais:
+    Type: Table
+    Parameters:
+      TableLogicalName: "cr000_registrodenotasfiscais"
+
+Screens:
+  DashboardScreen:
+    Properties:
+      Fill: =RGBA(245, 245, 245, 1)
+    Children:
+      - SidebarContainer:
+          Control: Container
+          Properties:
+            X: =0
+            Y: =0
+            Width: =If(varSidebarExpanded, 200, 60)
+            Height: =Parent.Height
+            Fill: =RGBA(30, 30, 30, 1)
+          Children:
+            - ToggleSidebar:
+                Control: Icon
+                Properties:
+                  Icon: =Icon.Hamburger
+                  Color: =Color.White
+                  X: =10
+                  Y: =10
+                  OnSelect: =Set(varSidebarExpanded, Not(varSidebarExpanded))
+            - NavDashboard:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Dashboard", "D")
+                  Y: =60
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(DashboardScreen, ScreenTransition.None)
+            - NavMinhasNotas:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Minhas Notas", "M")
+                  Y: =120
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(MinhasNotasScreen, ScreenTransition.None)
+            - NavNotasGerais:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Notas Gerais", "N")
+                  Y: =180
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(NotasGeraisScreen, ScreenTransition.None)
+            - NavRequisicoes:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Requisições", "R")
+                  Y: =240
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(RequisicoesScreen, ScreenTransition.None)
+      - Header:
+          Control: Label
+          Properties:
+            Text: ="Dashboard"
+            Size: =24
+            FontWeight: =FontWeight.Bold
+            X: =If(varSidebarExpanded, 220, 80)
+            Y: =20
+            Width: =Parent.Width - If(varSidebarExpanded, 240, 100)
+            Color: =RGBA(0, 0, 0, 1)
+      - SummaryContainer:
+          Control: Container
+          Properties:
+            X: =If(varSidebarExpanded, 220, 80)
+            Y: =80
+            Width: =Parent.Width - If(varSidebarExpanded, 240, 100)
+            Height: =150
+            Fill: =RGBA(255, 255, 255, 1)
+          Children:
+            - AssignedCards:
+                Control: Button
+                Properties:
+                  Text: '="Minhas Notas: " & CountRows(Filter(''Registro de Notas Fiscais'', ''Email Responsavel NFE'' = User().Email))'
+                  OnSelect: =Navigate(MinhasNotasScreen, ScreenTransition.None)
+                  Width: =200
+            - OverdueCards:
+                Control: Button
+                Properties:
+                  Text: '="Vencidas: " & CountRows(Filter(''Registro de Notas Fiscais'', ''DATA VENCIMENTO NF'' < Today()))'
+                  OnSelect: =Set(varFilter, "Overdue"); Navigate(NotasGeraisScreen, ScreenTransition.None)
+                  X: =220
+                  Width: =200
+                  Fill: =Color.Red
+            - CriticalCards:
+                Control: Button
+                Properties:
+                  Text: '="Fornecedor Crítico: " & CountRows(Filter(''Registro de Notas Fiscais'', ''Fornecedor Crítico?'' = true))'
+                  OnSelect: =Set(varFilter, "Critical"); Navigate(NotasGeraisScreen, ScreenTransition.None)
+                  X: =440
+                  Width: =200
+                  Fill: =Color.Orange
+            - PendingCards:
+                Control: Button
+                Properties:
+                  Text: '="Pendentes de Pagamento: " & CountRows(Filter(''Registro de Notas Fiscais'', ''STATUS PAGAMENTO'' = "Pendente"))'
+                  OnSelect: =Set(varFilter, "Pending"); Navigate(NotasGeraisScreen, ScreenTransition.None)
+                  X: =660
+                  Width: =200
+
+  MinhasNotasScreen:
+    Properties:
+      Fill: =RGBA(245, 245, 245, 1)
+    Children:
+      - SidebarContainer2:
+          Control: Container
+          Properties:
+            X: =0
+            Y: =0
+            Width: =If(varSidebarExpanded, 200, 60)
+            Height: =Parent.Height
+            Fill: =RGBA(30, 30, 30, 1)
+          Children:
+            - ToggleSidebar2:
+                Control: Icon
+                Properties:
+                  Icon: =Icon.Hamburger
+                  Color: =Color.White
+                  X: =10
+                  Y: =10
+                  OnSelect: =Set(varSidebarExpanded, Not(varSidebarExpanded))
+            - NavDashboard2:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Dashboard", "D")
+                  Y: =60
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(DashboardScreen, ScreenTransition.None)
+            - NavMinhasNotas2:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Minhas Notas", "M")
+                  Y: =120
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(MinhasNotasScreen, ScreenTransition.None)
+            - NavNotasGerais2:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Notas Gerais", "N")
+                  Y: =180
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(NotasGeraisScreen, ScreenTransition.None)
+            - NavRequisicoes2:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Requisições", "R")
+                  Y: =240
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(RequisicoesScreen, ScreenTransition.None)
+      - Header2:
+          Control: Label
+          Properties:
+            Text: ="Minhas Notas"
+            Size: =24
+            FontWeight: =FontWeight.Bold
+            X: =If(varSidebarExpanded, 220, 80)
+            Y: =20
+      - ListHeaderContainer:
+          Control: Container
+          Properties:
+            X: =If(varSidebarExpanded, 220, 80)
+            Y: =60
+            Width: =Parent.Width - If(varSidebarExpanded, 240, 100)
+            Height: =40
+          Children:
+            - Col1:
+                Control: Label
+                Properties:
+                  Text: ="Fornecedor & Nota"
+                  Width: =200
+                  FontWeight: =FontWeight.Bold
+            - Col2:
+                Control: Label
+                Properties:
+                  Text: ="Empresa"
+                  X: =200
+                  Width: =150
+                  FontWeight: =FontWeight.Bold
+            - Col3:
+                Control: Label
+                Properties:
+                  Text: ="STATUS"
+                  X: =350
+                  Width: =100
+                  FontWeight: =FontWeight.Bold
+            - Col4:
+                Control: Label
+                Properties:
+                  Text: ="STATUS AX"
+                  X: =450
+                  Width: =100
+                  FontWeight: =FontWeight.Bold
+            - Col5:
+                Control: Label
+                Properties:
+                  Text: ="PGTO"
+                  X: =550
+                  Width: =100
+                  FontWeight: =FontWeight.Bold
+            - Col6:
+                Control: Label
+                Properties:
+                  Text: ="Valor"
+                  X: =650
+                  Width: =100
+                  FontWeight: =FontWeight.Bold
+            - Col7:
+                Control: Label
+                Properties:
+                  Text: ="Vencimento"
+                  X: =750
+                  Width: =100
+                  FontWeight: =FontWeight.Bold
+      - InvoiceGallery:
+          Control: Gallery
+          Properties:
+            X: =If(varSidebarExpanded, 220, 80)
+            Y: =100
+            Width: =Parent.Width - If(varSidebarExpanded, 240, 100)
+            Height: =Parent.Height - 120
+            Items: =Filter('Registro de Notas Fiscais', 'Email Responsavel NFE' = User().Email)
+            TemplateFill: =If(ThisItem.'DATA VENCIMENTO NF' < Today(), RGBA(255, 200, 200, 1), RGBA(255, 255, 255, 1))
+          Children:
+            - InvoiceCard:
+                Control: Container
+                Properties:
+                  OnSelect: =Set(varSelectedInvoice, ThisItem); Navigate(InvoiceDetailScreen, ScreenTransition.None)
+                  Width: =Parent.TemplateWidth
+                Children:
+                  - TitleLabel:
+                      Control: Label
+                      Properties:
+                        Text: =ThisItem.Fornecedor & " - " & ThisItem.Nota & If(ThisItem.'Fornecedor Crítico?', " ⚠️", "")
+                        Width: =200
+                  - EmpresaLabel:
+                      Control: Label
+                      Properties:
+                        Text: =ThisItem.Empresa
+                        X: =200
+                        Width: =150
+                  - StatusBadge:
+                      Control: Label
+                      Properties:
+                        Text: =ThisItem.STATUS
+                        X: =350
+                        Width: =100
+                        Fill: =Switch(ThisItem.STATUS, "Aprovado", Color.Green, "Pendente", Color.Yellow, "Rejeitado", Color.Red, Color.Gray)
+                        Color: =Color.White
+                        Align: =Align.Center
+                  - StatusAXBadge:
+                      Control: Label
+                      Properties:
+                        Text: =ThisItem.'STATUS AX'
+                        X: =450
+                        Width: =100
+                        Align: =Align.Center
+                  - StatusPgtoBadge:
+                      Control: Label
+                      Properties:
+                        Text: =ThisItem.'STATUS PAGAMENTO'
+                        X: =550
+                        Width: =100
+                        Align: =Align.Center
+                  - ValorLabel:
+                      Control: Label
+                      Properties:
+                        Text: =Text(ThisItem.Valor, "[$-pt-BR]R$ #.##0,00")
+                        X: =650
+                        Width: =100
+                  - VencLabel:
+                      Control: Label
+                      Properties:
+                        Text: =Text(ThisItem.'DATA VENCIMENTO NF', "[$-pt-BR]dd/mm/yyyy")
+                        X: =750
+                        Width: =100
+
+  NotasGeraisScreen:
+    Properties:
+      Fill: =RGBA(245, 245, 245, 1)
+    Children:
+      - SidebarContainer3:
+          Control: Container
+          Properties:
+            X: =0
+            Y: =0
+            Width: =If(varSidebarExpanded, 200, 60)
+            Height: =Parent.Height
+            Fill: =RGBA(30, 30, 30, 1)
+          Children:
+            - ToggleSidebar3:
+                Control: Icon
+                Properties:
+                  Icon: =Icon.Hamburger
+                  Color: =Color.White
+                  X: =10
+                  Y: =10
+                  OnSelect: =Set(varSidebarExpanded, Not(varSidebarExpanded))
+            - NavDashboard3:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Dashboard", "D")
+                  Y: =60
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(DashboardScreen, ScreenTransition.None)
+            - NavMinhasNotas3:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Minhas Notas", "M")
+                  Y: =120
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(MinhasNotasScreen, ScreenTransition.None)
+            - NavNotasGerais3:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Notas Gerais", "N")
+                  Y: =180
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(NotasGeraisScreen, ScreenTransition.None)
+            - NavRequisicoes3:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Requisições", "R")
+                  Y: =240
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(RequisicoesScreen, ScreenTransition.None)
+      - Header3:
+          Control: Label
+          Properties:
+            Text: ="Notas Gerais"
+            Size: =24
+            FontWeight: =FontWeight.Bold
+            X: =If(varSidebarExpanded, 220, 80)
+            Y: =20
+      - FilterContainer:
+          Control: Container
+          Properties:
+            X: =If(varSidebarExpanded, 220, 80)
+            Y: =60
+            Width: =Parent.Width - If(varSidebarExpanded, 240, 100)
+            Height: =50
+          Children:
+            - ClearFilterBtn:
+                Control: Button
+                Properties:
+                  Text: ="X"
+                  Width: =40
+                  OnSelect: =Set(varFilter, Blank()); Reset(StatusFilter); Reset(EmpresaFilter); Reset(ResponsavelFilter); Reset(CriticoFilter)
+            - StatusFilter:
+                Control: Dropdown
+                Properties:
+                  Items: =Choices('Registro de Notas Fiscais'.STATUS)
+                  X: =50
+            - EmpresaFilter:
+                Control: Dropdown
+                Properties:
+                  Items: =Choices('Registro de Notas Fiscais'.Empresa)
+                  X: =200
+            - ResponsavelFilter:
+                Control: Dropdown
+                Properties:
+                  Items: =Choices('Registro de Notas Fiscais'.'Responsável NFE')
+                  X: =350
+            - CriticoFilter:
+                Control: Checkbox
+                Properties:
+                  Text: ="Somente Críticos"
+                  X: =500
+      - ListHeaderContainer2:
+          Control: Container
+          Properties:
+            X: =If(varSidebarExpanded, 220, 80)
+            Y: =110
+            Width: =Parent.Width - If(varSidebarExpanded, 240, 100)
+            Height: =40
+          Children:
+            - Col1b:
+                Control: Label
+                Properties:
+                  Text: ="Fornecedor & Nota"
+                  Width: =200
+                  FontWeight: =FontWeight.Bold
+            - Col2b:
+                Control: Label
+                Properties:
+                  Text: ="Empresa"
+                  X: =200
+                  Width: =150
+                  FontWeight: =FontWeight.Bold
+            - Col3b:
+                Control: Label
+                Properties:
+                  Text: ="STATUS"
+                  X: =350
+                  Width: =100
+                  FontWeight: =FontWeight.Bold
+            - Col4b:
+                Control: Label
+                Properties:
+                  Text: ="STATUS AX"
+                  X: =450
+                  Width: =100
+                  FontWeight: =FontWeight.Bold
+            - Col5b:
+                Control: Label
+                Properties:
+                  Text: ="PGTO"
+                  X: =550
+                  Width: =100
+                  FontWeight: =FontWeight.Bold
+            - Col6b:
+                Control: Label
+                Properties:
+                  Text: ="Valor"
+                  X: =650
+                  Width: =100
+                  FontWeight: =FontWeight.Bold
+            - Col7b:
+                Control: Label
+                Properties:
+                  Text: ="Vencimento"
+                  X: =750
+                  Width: =100
+                  FontWeight: =FontWeight.Bold
+      - AllInvoiceGallery:
+          Control: Gallery
+          Properties:
+            X: =If(varSidebarExpanded, 220, 80)
+            Y: =150
+            Width: =Parent.Width - If(varSidebarExpanded, 240, 100)
+            Height: =Parent.Height - 170
+            Items: =Filter('Registro de Notas Fiscais', (IsBlank(varFilter) Or (varFilter="Overdue" And 'DATA VENCIMENTO NF' < Today()) Or (varFilter="Critical" And 'Fornecedor Crítico?'=true) Or (varFilter="Pending" And 'STATUS PAGAMENTO'="Pendente")) And (IsBlank(StatusFilter.Selected.Value) Or STATUS = StatusFilter.Selected.Value) And (IsBlank(EmpresaFilter.Selected.Value) Or Empresa = EmpresaFilter.Selected.Value) And (IsBlank(ResponsavelFilter.Selected.Value) Or 'Responsável NFE' = ResponsavelFilter.Selected.Value) And (Not(CriticoFilter.Value) Or 'Fornecedor Crítico?'))
+            TemplateFill: =If(ThisItem.'DATA VENCIMENTO NF' < Today(), RGBA(255, 200, 200, 1), RGBA(255, 255, 255, 1))
+          Children:
+            - InvoiceCard2:
+                Control: Container
+                Properties:
+                  OnSelect: =Set(varSelectedInvoice, ThisItem); Navigate(InvoiceDetailScreen, ScreenTransition.None)
+                  Width: =Parent.TemplateWidth
+                Children:
+                  - TitleLabel2:
+                      Control: Label
+                      Properties:
+                        Text: =ThisItem.Fornecedor & " - " & ThisItem.Nota & If(ThisItem.'Fornecedor Crítico?', " ⚠️", "")
+                        Width: =200
+                  - EmpresaLabel2:
+                      Control: Label
+                      Properties:
+                        Text: =ThisItem.Empresa
+                        X: =200
+                        Width: =150
+                  - StatusBadge2:
+                      Control: Label
+                      Properties:
+                        Text: =ThisItem.STATUS
+                        X: =350
+                        Width: =100
+                        Fill: =Switch(ThisItem.STATUS, "Aprovado", Color.Green, "Pendente", Color.Yellow, "Rejeitado", Color.Red, Color.Gray)
+                        Color: =Color.White
+                        Align: =Align.Center
+                  - StatusAXBadge2:
+                      Control: Label
+                      Properties:
+                        Text: =ThisItem.'STATUS AX'
+                        X: =450
+                        Width: =100
+                        Align: =Align.Center
+                  - StatusPgtoBadge2:
+                      Control: Label
+                      Properties:
+                        Text: =ThisItem.'STATUS PAGAMENTO'
+                        X: =550
+                        Width: =100
+                        Align: =Align.Center
+                  - ValorLabel2:
+                      Control: Label
+                      Properties:
+                        Text: =Text(ThisItem.Valor, "[$-pt-BR]R$ #.##0,00")
+                        X: =650
+                        Width: =100
+                  - VencLabel2:
+                      Control: Label
+                      Properties:
+                        Text: =Text(ThisItem.'DATA VENCIMENTO NF', "[$-pt-BR]dd/mm/yyyy")
+                        X: =750
+                        Width: =100
+
+  RequisicoesScreen:
+    Properties:
+      Fill: =RGBA(245, 245, 245, 1)
+    Children:
+      - SidebarContainer4:
+          Control: Container
+          Properties:
+            X: =0
+            Y: =0
+            Width: =If(varSidebarExpanded, 200, 60)
+            Height: =Parent.Height
+            Fill: =RGBA(30, 30, 30, 1)
+          Children:
+            - ToggleSidebar4:
+                Control: Icon
+                Properties:
+                  Icon: =Icon.Hamburger
+                  Color: =Color.White
+                  X: =10
+                  Y: =10
+                  OnSelect: =Set(varSidebarExpanded, Not(varSidebarExpanded))
+            - NavDashboard4:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Dashboard", "D")
+                  Y: =60
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(DashboardScreen, ScreenTransition.None)
+            - NavMinhasNotas4:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Minhas Notas", "M")
+                  Y: =120
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(MinhasNotasScreen, ScreenTransition.None)
+            - NavNotasGerais4:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Notas Gerais", "N")
+                  Y: =180
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(NotasGeraisScreen, ScreenTransition.None)
+            - NavRequisicoes4:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Requisições", "R")
+                  Y: =240
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(RequisicoesScreen, ScreenTransition.None)
+      - Header4:
+          Control: Label
+          Properties:
+            Text: ="Requisições"
+            Size: =24
+            FontWeight: =FontWeight.Bold
+            X: =If(varSidebarExpanded, 220, 80)
+            Y: =20
+      - ReqGallery:
+          Control: Gallery
+          Properties:
+            X: =If(varSidebarExpanded, 220, 80)
+            Y: =80
+            Width: =Parent.Width - If(varSidebarExpanded, 240, 100)
+            Height: =Parent.Height - 100
+            Items: =Filter('Registro de Notas Fiscais', Not(IsBlank(Requisição)))
+            TemplateFill: =If(ThisItem.'STATUS AX' = "Pendente", RGBA(255, 255, 200, 1), RGBA(255, 255, 255, 1))
+          Children:
+            - ReqCard:
+                Control: Container
+                Properties:
+                  OnSelect: =Set(varSelectedInvoice, ThisItem); Navigate(InvoiceDetailScreen, ScreenTransition.None)
+                  Width: =Parent.TemplateWidth
+                Children:
+                  - ReqTitle:
+                      Control: Label
+                      Properties:
+                        Text: '=ThisItem.Requisição & " | Pré-pedido: " & ThisItem.''Pré-pedido'' & " | OC: " & ThisItem.''Ordem de Compra'''
+                        FontWeight: =FontWeight.Bold
+                        Width: =400
+                  - AprovadorLabel:
+                      Control: Label
+                      Properties:
+                        Text: '="Aprovador: " & ThisItem.Aprovador'
+                        Y: =40
+                  - FornecedorLabel:
+                      Control: Label
+                      Properties:
+                        Text: '="Fornecedor: " & ThisItem.Fornecedor'
+                        X: =200
+                        Y: =40
+                  - NotaLabel:
+                      Control: Label
+                      Properties:
+                        Text: '="Nota Relacionada: " & ThisItem.Nota'
+                        X: =400
+                        Y: =40
+                  - StatusAXBadge:
+                      Control: Label
+                      Properties:
+                        Text: =ThisItem.'STATUS AX'
+                        X: =600
+                        Fill: =If(ThisItem.'STATUS AX' = "Aprovado", Color.Green, Color.Yellow)
+
+  InvoiceDetailScreen:
+    Properties:
+      Fill: =RGBA(245, 245, 245, 1)
+    Children:
+      - SidebarContainer5:
+          Control: Container
+          Properties:
+            X: =0
+            Y: =0
+            Width: =If(varSidebarExpanded, 200, 60)
+            Height: =Parent.Height
+            Fill: =RGBA(30, 30, 30, 1)
+          Children:
+            - ToggleSidebar5:
+                Control: Icon
+                Properties:
+                  Icon: =Icon.Hamburger
+                  Color: =Color.White
+                  X: =10
+                  Y: =10
+                  OnSelect: =Set(varSidebarExpanded, Not(varSidebarExpanded))
+            - NavDashboard5:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Dashboard", "D")
+                  Y: =60
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(DashboardScreen, ScreenTransition.None)
+            - NavMinhasNotas5:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Minhas Notas", "M")
+                  Y: =120
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(MinhasNotasScreen, ScreenTransition.None)
+            - NavNotasGerais5:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Notas Gerais", "N")
+                  Y: =180
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(NotasGeraisScreen, ScreenTransition.None)
+            - NavRequisicoes5:
+                Control: Button
+                Properties:
+                  Text: =If(varSidebarExpanded, "Requisições", "R")
+                  Y: =240
+                  Width: =Parent.Width
+                  OnSelect: =Navigate(RequisicoesScreen, ScreenTransition.None)
+      - Header5:
+          Control: Label
+          Properties:
+            Text: =varSelectedInvoice.Fornecedor & " - " & varSelectedInvoice.Nota & " (" & varSelectedInvoice.Empresa & ") - " & varSelectedInvoice.STATUS
+            Size: =24
+            FontWeight: =FontWeight.Bold
+            X: =If(varSidebarExpanded, 220, 80)
+            Y: =20
+      - DetailForm:
+          Control: Form
+          Properties:
+            X: =If(varSidebarExpanded, 220, 80)
+            Y: =80
+            Width: =Parent.Width - If(varSidebarExpanded, 240, 100)
+            Height: =Parent.Height - 150
+            DataSource: ='Registro de Notas Fiscais'
+            Item: =varSelectedInvoice
+            DisplayMode: =If(varSelectedInvoice.'Email Responsavel NFE' = User().Email, DisplayMode.Edit, DisplayMode.View)
+          Children:
+            - InvoiceInfoGroup:
+                Control: Container
+                Properties:
+                  Height: =100
+                Children:
+                  - DC_Fornecedor:
+                      Control: DataCard
+                      Properties:
+                        DataField: ="Fornecedor"
+                  - DC_Nota:
+                      Control: DataCard
+                      Properties:
+                        DataField: ="Nota"
+                  - DC_Empresa:
+                      Control: DataCard
+                      Properties:
+                        DataField: ="Empresa"
+            - FinancialInfoGroup:
+                Control: Container
+                Properties:
+                  Y: =100
+                  Height: =100
+                Children:
+                  - DC_Valor:
+                      Control: DataCard
+                      Properties:
+                        DataField: ="Valor"
+                  - DC_VencimentoNF:
+                      Control: DataCard
+                      Properties:
+                        DataField: ="DATA VENCIMENTO NF"
+            - AXInfoGroup:
+                Control: Container
+                Properties:
+                  Y: =200
+                  Height: =100
+                Children:
+                  - DC_StatusAX:
+                      Control: DataCard
+                      Properties:
+                        DataField: ="STATUS AX"
+                  - DC_StatusPgto:
+                      Control: DataCard
+                      Properties:
+                        DataField: ="STATUS PAGAMENTO"
+            - RequisitionGroup:
+                Control: Container
+                Properties:
+                  Y: =300
+                  Height: =100
+                Children:
+                  - DC_Req:
+                      Control: DataCard
+                      Properties:
+                        DataField: ="Requisição"
+                  - DC_Aprovador:
+                      Control: DataCard
+                      Properties:
+                        DataField: ="Aprovador"
+            - ObsGroup:
+                Control: Container
+                Properties:
+                  Y: =400
+                  Height: =100
+                Children:
+                  - DC_Obs:
+                      Control: DataCard
+                      Properties:
+                        DataField: ="Observações"
+      - LinkButton:
+          Control: Button
+          Properties:
+            Text: ="Abrir NF"
+            X: =If(varSidebarExpanded, 220, 80)
+            Y: =Parent.Height - 60
+            OnSelect: =Launch(varSelectedInvoice.'Link NF')
